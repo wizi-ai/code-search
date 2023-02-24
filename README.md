@@ -1,4 +1,4 @@
-## Code search for Frontend teams by WIzi AI
+## Code search for Frontend teams by Wizi AI
 
 **We are launching our Code Search feature as an open-source project for frontend teams to enjoy instant natural language search in React (JS/TS) codebases.**
 
