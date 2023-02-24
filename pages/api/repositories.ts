@@ -19,7 +19,7 @@ export default async function handler(
       const response = await octokit.request("GET /user/repos", {
         per_page: 100,
       });
-      res.status(200).json(response.data);
+      return res.status(200).json(response.data);
     }
     default: {
       res.setHeader("Allow", ["GET"]);

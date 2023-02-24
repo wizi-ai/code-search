@@ -125,7 +125,7 @@ export default async function handler(
         new OpenAIEmbeddings()
       );
 
-      res.status(200).json("Indexing complete");
+      return res.status(200).json("Indexing complete");
     }
     default: {
       res.setHeader("Allow", ["POST"]);

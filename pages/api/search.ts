@@ -18,7 +18,7 @@ export default async function handler(
       );
       const queryResult = await pineconeStore.similaritySearch(query, 5);
 
-      res.status(200).json(queryResult);
+      return res.status(200).json(queryResult);
     }
     default: {
       res.setHeader("Allow", ["POST"]);
