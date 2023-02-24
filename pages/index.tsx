@@ -29,12 +29,23 @@ interface CodeSnippet {
   metadata: CodeSnippetMeta;
 }
 
+interface LocalStorageObject {
+  id: number;
+  name: string;
+  full_name: string;
+  owner: string;
+  html_url: string;
+  default_branch: string;
+  indexed_by_wizi: boolean;
+}
+
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [matches, setMatches] = useState<CodeSnippet[]>([]);
-  const [localStorageObject, setLocalStorageObject] = useState(null);
-  const [userRepos, setUserRepos] = useState([]);
+  const [localStorageObject, setLocalStorageObject] =
+    useState<LocalStorageObject | null>(null);
+  const [userRepos, setUserRepos] = useState<any[]>([]);
   const [indexingInProgress, setIndexingInProgress] = useState(false);
   const [indexed, setIndexed] = useState(false);
 
@@ -77,8 +88,8 @@ export default function Home() {
     }
   }, []);
 
-  const setSelectedRepo = (id) => {
-    const repo = userRepos.filter((repo) => repo.id === id)[0];
+  const setSelectedRepo = (id: string) => {
+    const repo = userRepos.filter((repo) => repo.id.toString === id)[0];
     localStorage.setItem(
       "wizi-ai-selected-repo",
       JSON.stringify({
@@ -99,32 +110,34 @@ export default function Home() {
   };
 
   const indexSelectedRepo = async () => {
-    setIndexingInProgress(true);
-    const response = await fetch("/api/embeddings", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        owner: localStorageObject.owner,
-        repo: localStorageObject.name,
-      }),
-    });
-    const data = await response.json();
-    localStorage.setItem(
-      "wizi-ai-selected-repo",
-      JSON.stringify({
-        id: localStorageObject.id,
-        name: localStorageObject.name,
-        full_name: localStorageObject.full_name,
-        owner: localStorageObject.owner,
-        html_url: localStorageObject.html_url,
-        default_branch: localStorageObject.default_branch,
-        indexed_by_wizi: true,
-      })
-    );
-    setIndexed(true);
-    setIndexingInProgress(false);
+    if (localStorageObject) {
+      setIndexingInProgress(true);
+      const response = await fetch("/api/embeddings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          owner: localStorageObject.owner,
+          repo: localStorageObject.name,
+        }),
+      });
+      const data = await response.json();
+      localStorage.setItem(
+        "wizi-ai-selected-repo",
+        JSON.stringify({
+          id: localStorageObject.id,
+          name: localStorageObject.name,
+          full_name: localStorageObject.full_name,
+          owner: localStorageObject.owner,
+          html_url: localStorageObject.html_url,
+          default_branch: localStorageObject.default_branch,
+          indexed_by_wizi: true,
+        })
+      );
+      setIndexed(true);
+      setIndexingInProgress(false);
+    }
   };
 
   if (localStorageObject === null) {

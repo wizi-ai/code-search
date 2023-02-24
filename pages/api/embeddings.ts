@@ -15,8 +15,7 @@ export default async function handler(
   const { owner, repo } = req.body;
   switch (req.method) {
     case "POST": {
-      console.log("MADE IT HERE: ", owner, repo);
-      let allDocuments = [];
+      let allDocuments: any[] = [];
       const octokit = new Octokit({
         auth: process.env.GITHUB_PERSONAL_ACCESS_TOKEN,
       });
@@ -52,8 +51,10 @@ export default async function handler(
         ],
       });
 
-      let contents = response.data;
-      console.log("ABOUT TO TRAVERSE REPO CONTENTS");
+      let contents: any = [];
+      if (Array.isArray(response.data)) {
+        contents = response.data;
+      }
       while (contents.length) {
         const fileContent = contents.shift();
         if (fileContent.type === "dir") {
@@ -84,9 +85,13 @@ export default async function handler(
                 path: fileContent.path,
               }
             );
+            let codeString: string = "";
+            if (typeof temp.data === "string") {
+              codeString = temp.data;
+            }
             allDocuments = allDocuments.concat(
               reactCodeSplitter.createDocuments(
-                [temp.data],
+                [codeString],
                 [{ source: fileContent.path }]
               )
             );
