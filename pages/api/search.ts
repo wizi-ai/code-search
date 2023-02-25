@@ -12,11 +12,11 @@ export default async function handler(
   switch (req.method) {
     case "POST": {
       const pineconeClient = new PineconeClient({
-        apiKey: process.env.NEXT_PUBLIC_PINECONE_API_KEY,
-        baseUrl: process.env.NEXT_PUBLIC_PINECONE_BASE_URL,
+        apiKey: process.env.PINECONE_API_KEY,
+        baseUrl: process.env.PINECONE_BASE_URL,
       });
       const openaiClient = new OpenAIEmbeddings({
-        openAIApiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+        openAIApiKey: process.env.OPENAI_API_KEY,
       });
       const pineconeStore = await PineconeStore.fromExistingIndex(
         pineconeClient,

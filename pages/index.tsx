@@ -6,12 +6,12 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { atomDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 
 import { Octokit } from "octokit";
-import path from "path";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 // import { encoding_for_model } from "@dqbd/tiktoken";
 import { PineconeStore } from "langchain/vectorstores";
 import { OpenAIEmbeddings } from "langchain/embeddings";
 import { PineconeClient } from "pinecone-client";
+import path from "path";
 
 import Alert from "@mui/material/Alert";
 import Container from "@mui/material/Container";
@@ -122,18 +122,6 @@ export default function Home() {
   const indexSelectedRepo = async () => {
     if (localStorageObject) {
       setIndexingInProgress(true);
-      // const response = await fetch("/api/embeddings", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify({
-      //     owner: localStorageObject.owner,
-      //     repo: localStorageObject.name,
-      //   }),
-      // });
-      // const data = await response.json();
-      // console.log("DATA: ", data);
 
       let allDocuments: any[] = [];
       const owner = localStorageObject.owner;
@@ -221,39 +209,18 @@ export default function Home() {
         }
       }
 
-      // let totalTokens = 0;
-      // const enc = encoding_for_model("text-embedding-ada-002");
-
-      // allDocuments.map((doc) => {
-      //   totalTokens += enc.encode(doc.pageContent).length;
-      // });
-      // const approximateOpenAICostForIndexing = (
-      //   (totalTokens / 1000) *
-      //   0.0004
-      // ).toPrecision(4);
-
-      // console.log("TOTAL DOCS: ", allDocuments.length);
-      // console.log("TOTAL TOKENS: ", totalTokens);
-      // console.log(
-      //   "APPROXIMATE OPENAI COST FOR INDEXING: $",
-      //   approximateOpenAICostForIndexing
-      // );
-
-      const pineconeClient = new PineconeClient({
-        apiKey: process.env.NEXT_PUBLIC_PINECONE_API_KEY,
-        baseUrl: process.env.NEXT_PUBLIC_PINECONE_BASE_URL,
-      });
-      const openaiClient = new OpenAIEmbeddings({
-        openAIApiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+      await fetch("/api/embeddings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          documents: allDocuments,
+        }),
       });
 
-      pineconeClient.delete({ deleteAll: true });
+      await new Promise((f) => setTimeout(f, 10000));
 
-      const pineconeStore = await PineconeStore.fromDocuments(
-        pineconeClient,
-        allDocuments,
-        openaiClient
-      );
       localStorage.setItem(
         "wizi-ai-selected-repo",
         JSON.stringify({
