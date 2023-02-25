@@ -5,6 +5,9 @@
 > **Note**
 > **that this is a self-hosted tool that uses Vercel, OpenAI and Pinecone. All of these tools have generous free tiers which should be more than enough for you to try Code Search. For reference, indexing a mid-sized React repo should cost $1-2 on average.**
 
+> **Warning**
+> This is not a production ready solution. The goal of this repo is to give a quick template for frontend teams to experiment with their own code search tools.
+
 
 https://user-images.githubusercontent.com/25925393/221127958-953ff4cd-60ff-4c19-83b1-24ff03977063.mp4
 
