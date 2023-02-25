@@ -11,10 +11,16 @@ export default async function handler(
   const { query } = req.body;
   switch (req.method) {
     case "POST": {
-      const pineconeClient = new PineconeClient({});
+      const pineconeClient = new PineconeClient({
+        apiKey: process.env.NEXT_PUBLIC_PINECONE_API_KEY,
+        baseUrl: process.env.NEXT_PUBLIC_PINECONE_BASE_URL,
+      });
+      const openaiClient = new OpenAIEmbeddings({
+        openAIApiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+      });
       const pineconeStore = await PineconeStore.fromExistingIndex(
         pineconeClient,
-        new OpenAIEmbeddings()
+        openaiClient
       );
       const queryResult = await pineconeStore.similaritySearchWithScore(
         query,

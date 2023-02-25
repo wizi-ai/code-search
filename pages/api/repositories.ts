@@ -13,7 +13,7 @@ export default async function handler(
   switch (req.method) {
     case "GET": {
       const octokit = new Octokit({
-        auth: process.env.GITHUB_PERSONAL_ACCESS_TOKEN,
+        auth: process.env.NEXT_PUBLIC_GITHUB_PERSONAL_ACCESS_TOKEN,
       });
 
       const response = await octokit.request("GET /user/repos", {

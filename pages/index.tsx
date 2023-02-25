@@ -5,6 +5,14 @@ import Head from "next/head";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { atomDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 
+import { Octokit } from "octokit";
+import path from "path";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+// import { encoding_for_model } from "@dqbd/tiktoken";
+import { PineconeStore } from "langchain/vectorstores";
+import { OpenAIEmbeddings } from "langchain/embeddings";
+import { PineconeClient } from "pinecone-client";
+
 import Alert from "@mui/material/Alert";
 import Container from "@mui/material/Container";
 import Chip from "@mui/material/Chip";
@@ -114,17 +122,138 @@ export default function Home() {
   const indexSelectedRepo = async () => {
     if (localStorageObject) {
       setIndexingInProgress(true);
-      const response = await fetch("/api/embeddings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          owner: localStorageObject.owner,
-          repo: localStorageObject.name,
-        }),
+      // const response = await fetch("/api/embeddings", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify({
+      //     owner: localStorageObject.owner,
+      //     repo: localStorageObject.name,
+      //   }),
+      // });
+      // const data = await response.json();
+      // console.log("DATA: ", data);
+
+      let allDocuments: any[] = [];
+      const owner = localStorageObject.owner;
+      const repo = localStorageObject.name;
+      const octokit = new Octokit({
+        auth: process.env.NEXT_PUBLIC_GITHUB_PERSONAL_ACCESS_TOKEN,
       });
-      const data = await response.json();
+
+      const response = await octokit.request(
+        "GET /repos/{owner}/{repo}/contents/{path}",
+        {
+          mediaType: {
+            format: "raw",
+          },
+          owner: owner,
+          repo: repo,
+          path: "",
+        }
+      );
+
+      const reactCodeSplitter = new RecursiveCharacterTextSplitter({
+        chunkSize: 800,
+        chunkOverlap: 0,
+        separators: [
+          "\nconst ",
+          "\nlet ",
+          "\nfunction ",
+          "\ninterface ",
+          "\nconsole ",
+          "\nexport ",
+          "\nuseEffect ",
+          "\nimport ",
+          "\n\n",
+          "\n",
+          " ",
+          "",
+        ],
+      });
+
+      let contents: any = [];
+      if (Array.isArray(response.data)) {
+        contents = response.data;
+      }
+      while (contents.length) {
+        const fileContent = contents.shift();
+        if (fileContent.type === "dir") {
+          const fileResponse = await octokit.request(
+            "GET /repos/{owner}/{repo}/contents/{path}",
+            {
+              mediaType: {
+                format: "raw",
+              },
+              owner: owner,
+              repo: repo,
+              path: fileContent.path,
+            }
+          );
+          contents = contents.concat(fileResponse.data);
+        } else if (fileContent.path) {
+          const { name, ext } = path.parse(fileContent.path);
+
+          if ([".js", ".ts", ".tsx", ".jsx"].includes(ext)) {
+            const temp = await octokit.request(
+              "GET /repos/{owner}/{repo}/contents/{path}",
+              {
+                mediaType: {
+                  format: "raw",
+                },
+                owner: owner,
+                repo: repo,
+                path: fileContent.path,
+              }
+            );
+            let codeString: string = "";
+            if (typeof temp.data === "string") {
+              codeString = temp.data;
+            }
+            allDocuments = allDocuments.concat(
+              reactCodeSplitter.createDocuments(
+                [codeString],
+                [{ source: fileContent.path }]
+              )
+            );
+          }
+        }
+      }
+
+      // let totalTokens = 0;
+      // const enc = encoding_for_model("text-embedding-ada-002");
+
+      // allDocuments.map((doc) => {
+      //   totalTokens += enc.encode(doc.pageContent).length;
+      // });
+      // const approximateOpenAICostForIndexing = (
+      //   (totalTokens / 1000) *
+      //   0.0004
+      // ).toPrecision(4);
+
+      // console.log("TOTAL DOCS: ", allDocuments.length);
+      // console.log("TOTAL TOKENS: ", totalTokens);
+      // console.log(
+      //   "APPROXIMATE OPENAI COST FOR INDEXING: $",
+      //   approximateOpenAICostForIndexing
+      // );
+
+      const pineconeClient = new PineconeClient({
+        apiKey: process.env.NEXT_PUBLIC_PINECONE_API_KEY,
+        baseUrl: process.env.NEXT_PUBLIC_PINECONE_BASE_URL,
+      });
+      const openaiClient = new OpenAIEmbeddings({
+        openAIApiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+      });
+
+      pineconeClient.delete({ deleteAll: true });
+
+      const pineconeStore = await PineconeStore.fromDocuments(
+        pineconeClient,
+        allDocuments,
+        openaiClient
+      );
       localStorage.setItem(
         "wizi-ai-selected-repo",
         JSON.stringify({
