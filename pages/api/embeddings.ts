@@ -127,9 +127,13 @@ export default async function handler(
 
       pineconeClient.delete({ deleteAll: true });
 
-      PineconeStore.fromDocuments(pineconeClient, documents, openaiClient);
+      await PineconeStore.fromDocuments(
+        pineconeClient,
+        documents,
+        openaiClient
+      );
 
-      return res.status(200).json("Indexing kicked off");
+      return res.status(200).json("Indexing complete");
     }
     default: {
       res.setHeader("Allow", ["POST"]);

@@ -205,6 +205,7 @@ export default function Home() {
                 [{ source: fileContent.path }]
               )
             );
+            if (allDocuments.length > 300) break;
           }
         }
       }
@@ -219,7 +220,7 @@ export default function Home() {
         }),
       });
 
-      await new Promise((f) => setTimeout(f, 10000));
+      // await new Promise((f) => setTimeout(f, 10000));
 
       localStorage.setItem(
         "wizi-ai-selected-repo",
