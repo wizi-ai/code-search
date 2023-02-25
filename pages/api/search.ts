@@ -16,9 +16,26 @@ export default async function handler(
         pineconeClient,
         new OpenAIEmbeddings()
       );
-      const queryResult = await pineconeStore.similaritySearch(query, 5);
+      const queryResult = await pineconeStore.similaritySearchWithScore(
+        query,
+        5
+      );
 
-      return res.status(200).json(queryResult);
+      let formattedResults: {
+        pageContent: any;
+        metadata: { source: any; score: any };
+      }[] = [];
+      queryResult.map((result: any[]) => {
+        formattedResults.push({
+          pageContent: result[0].pageContent,
+          metadata: {
+            source: result[0].metadata.source,
+            score: result[1],
+          },
+        });
+      });
+
+      return res.status(200).json(formattedResults);
     }
     default: {
       res.setHeader("Allow", ["POST"]);

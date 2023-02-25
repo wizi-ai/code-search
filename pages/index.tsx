@@ -22,6 +22,7 @@ import Layout from "components/Layout";
 
 interface CodeSnippetMeta {
   source: string;
+  score: number;
 }
 
 interface CodeSnippet {
@@ -48,6 +49,7 @@ export default function Home() {
   const [userRepos, setUserRepos] = useState<any[]>([]);
   const [indexingInProgress, setIndexingInProgress] = useState(false);
   const [indexed, setIndexed] = useState(false);
+  const [selectedRepoId, setSelectedRepoId] = useState<string>("");
 
   const getSearchResults = async () => {
     setIsLoading(true);
@@ -87,9 +89,9 @@ export default function Home() {
       getUserRepositories();
     }
   }, []);
-
   const setSelectedRepo = (id: string) => {
-    const repo = userRepos.filter((repo) => repo.id.toString === id)[0];
+    setSelectedRepoId(id);
+    const repo = userRepos.filter((repo) => repo.id.toString() === id)[0];
     localStorage.setItem(
       "wizi-ai-selected-repo",
       JSON.stringify({
@@ -166,13 +168,14 @@ export default function Home() {
                     <Select
                       labelId="repo-select-label"
                       id="repo-select"
+                      value={selectedRepoId}
                       label="Select a repo"
                       onChange={(event: SelectChangeEvent) => {
-                        setSelectedRepo(event.target.value as string);
+                        setSelectedRepo(event.target.value);
                       }}
                     >
                       {userRepos.map((repo, it) => (
-                        <MenuItem value={repo.id} key={it}>
+                        <MenuItem value={repo.id.toString()} key={it}>
                           {repo.full_name}
                         </MenuItem>
                       ))}
@@ -355,6 +358,19 @@ export default function Home() {
                           sx={{ fontSize: "0.9rem", ml: 1, p: 1 }}
                           variant="outlined"
                           clickable
+                        />
+                        <Chip
+                          label={`Match: ${Math.round(
+                            match.metadata.score * 100
+                          )}%`}
+                          size="small"
+                          color={
+                            Math.round(match.metadata.score * 100) < 80
+                              ? "warning"
+                              : "primary"
+                          }
+                          sx={{ fontSize: "0.85rem", ml: 1, p: 1 }}
+                          variant="outlined"
                         />
                       </Grid>
                       <Grid item xs={6} sx={{ textAlign: "right" }}>

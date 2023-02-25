@@ -119,6 +119,8 @@ export default async function handler(
 
       const pineconeClient = new PineconeClient({});
 
+      pineconeClient.delete({ deleteAll: true });
+
       const pineconeStore = await PineconeStore.fromDocuments(
         pineconeClient,
         allDocuments,
